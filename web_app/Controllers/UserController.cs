@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using web_app.Models;
+using web_app.Services;
 
 namespace web_app.Controllers
 {
@@ -11,29 +13,73 @@ namespace web_app.Controllers
     [Route("[controller]")]
     public class UserController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
-
         private readonly ILogger<UserController> _logger;
+        private readonly UsersService _usersService;
 
-        public UserController(ILogger<UserController> logger)
+        public UserController(ILogger<UserController> logger, UsersService usersService)
         {
             _logger = logger;
+            _usersService = usersService;
         }
 
         [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        public async Task<List<User>> Get() =>
+            await _usersService.GetAsync();
+
+        [HttpGet("{id:length(24)}")]
+        public async Task<ActionResult<User>> Get(string id)
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            var user = await _usersService.GetAsync(id);
+
+            if (user is null)
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            })
-            .ToArray();
+                return NotFound();
+            }
+
+            return user;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Post(UserDTO userDto)
+        {
+            User newUser = new User();
+            newUser.Name = userDto.Name;
+            newUser.CreatedDate = DateTime.Now;
+            await _usersService.CreateAsync(newUser);
+
+            return CreatedAtAction(nameof(Get), new { id = newUser.Id }, newUser);
+        }
+
+        [HttpPut("{id:length(24)}")]
+        public async Task<IActionResult> Update(string id, UserDTO userDto)
+        {
+            var user = await _usersService.GetAsync(id);
+
+            if (user is null)
+            {
+                return NotFound();
+            }
+
+            user.Name = userDto.Name;
+
+            await _usersService.UpdateAsync(id, user);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id:length(24)}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            var user = await _usersService.GetAsync(id);
+
+            if (user is null)
+            {
+                return NotFound();
+            }
+
+            await _usersService.RemoveAsync(id);
+
+            return NoContent();
         }
     }
 }
