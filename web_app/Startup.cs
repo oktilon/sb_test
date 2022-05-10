@@ -23,6 +23,7 @@ namespace web_app
         {
 
             services.AddSingleton<UsersService>();
+            services.AddScoped<IAuthService, AuthService>();
 
             services.AddControllersWithViews();
 

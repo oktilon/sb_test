@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using web_app.Models;
 using web_app.Services;
 
@@ -23,62 +24,29 @@ namespace web_app.Controllers
         }
 
         [HttpGet]
-        public async Task<List<User>> Get() =>
-            await _usersService.GetAsync();
-
-        [HttpGet("{id:length(24)}")]
-        public async Task<ActionResult<User>> Get(string id)
+        public async Task<List<User>> Get()
         {
-            var user = await _usersService.GetAsync(id);
-
-            if (user is null)
-            {
-                return NotFound();
-            }
-
-            return user;
+            _logger.LogInformation("Acquired users list");
+            return await _usersService.GetAsync();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(UserDTO userDto)
+        public IActionResult Post(UserDTO newUser)
         {
-            User newUser = new User();
-            newUser.Name = userDto.Name;
-            newUser.CreatedDate = DateTime.Now;
-            await _usersService.CreateAsync(newUser);
-
-            return CreatedAtAction(nameof(Get), new { id = newUser.Id }, newUser);
-        }
-
-        [HttpPut("{id:length(24)}")]
-        public async Task<IActionResult> Update(string id, UserDTO userDto)
-        {
-            var user = await _usersService.GetAsync(id);
-
-            if (user is null)
-            {
-                return NotFound();
-            }
-
-            user.Name = userDto.Name;
-
-            await _usersService.UpdateAsync(id, user);
+            _logger.LogInformation("Add new user %s", newUser.Name);
+            _usersService.addUser(newUser);
 
             return NoContent();
         }
 
-        [HttpDelete("{id:length(24)}")]
-        public async Task<IActionResult> Delete(string id)
+        [HttpPost, Route("login")]
+        public IActionResult Login(AuthUser authUser)
         {
-            var user = await _usersService.GetAsync(id);
-
-            if (user is null)
+            if (!_usersService.loginUser(authUser))
             {
                 return NotFound();
             }
-
-            await _usersService.RemoveAsync(id);
-
+            _logger.LogInformation("Login of {0}", authUser.UserName);
             return NoContent();
         }
     }

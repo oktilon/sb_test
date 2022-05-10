@@ -34,6 +34,9 @@ export default class App extends Component {
                 <Route exact path='/'>
                     <Home />
                 </Route>
+                <Route path='/login'>
+                    <Login />
+                </Route>
                 <Route path='/users'>
                     <Users user={currentUser} />
                 </Route>
