@@ -1,10 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using web_app.Models;
 using web_app.Services;
 
@@ -24,10 +20,15 @@ namespace web_app.Controllers
         }
 
         [HttpGet]
-        public async Task<List<User>> Get()
+        public ActionResult<List<User>> Get()
         {
+            var uid = HttpContext.Items["UserId"];
+            if (uid == null)
+            {
+                return Unauthorized();
+            }
             _logger.LogInformation("Acquired users list");
-            return await _usersService.GetAsync();
+            return _usersService.GetUsers();
         }
 
         [HttpPost]
@@ -40,14 +41,15 @@ namespace web_app.Controllers
         }
 
         [HttpPost, Route("login")]
-        public IActionResult Login(AuthUser authUser)
+        public ActionResult<AuthUserDTO> Login([FromBody] AuthUser authUser)
         {
-            if (!_usersService.loginUser(authUser))
+            var auth = _usersService.loginUser(authUser);
+            if (auth == null)
             {
-                return NotFound();
+                return BadRequest("Invalid user or password");
             }
-            _logger.LogInformation("Login of {0}", authUser.UserName);
-            return NoContent();
+            _logger.LogInformation("Login of {0}", authUser.Username);
+            return auth;
         }
     }
 }

@@ -22,7 +22,7 @@ namespace web_app.Models
             _config = configuration;
         }
 
-        public async Task Invoke(HttpContext context, IAuthService authService)
+        public async Task Invoke(HttpContext context)
         {
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 

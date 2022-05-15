@@ -6,7 +6,7 @@ namespace web_app.Services
 {
     public interface IUsersService
     {
-        public Task<List<User>> GetAsync();
+        public List<User> GetUsers();
         public void addUser(UserDTO newUser);
     }
 }

@@ -5,7 +5,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using RabbitMQ.Client;
+using System.Security.Claims;
+using System;
 
 namespace web_app.Services
 {
@@ -28,8 +32,10 @@ namespace web_app.Services
             _configuration = configuration;
         }
 
-        public async Task<List<User>> GetAsync() =>
-            await _usersCollection.Find(_ => true).ToListAsync();
+        public List<User> GetUsers()
+        {
+            return _usersCollection.Find(_ => true).ToList();
+        }
 
         public void addUser(UserDTO newUser)
         {
@@ -51,10 +57,32 @@ namespace web_app.Services
             }
         }
 
-        public bool loginUser(AuthUser authUser)
+        public string GenerateJwtToken(AuthUserDTO user)
         {
-            return authUser.UserName == _configuration["AdminLogin"]
-                   && authUser.Password == _configuration["AdminPass"];
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["JwtSecret"]);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[] {
+                     new Claim("id", user.Id.ToString()),
+                     new Claim("name", user.Name)
+                }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        public AuthUserDTO loginUser(AuthUser authUser)
+        {
+            if (authUser.Username == _configuration["AdminLogin"] && authUser.Password == _configuration["AdminPass"])
+            {
+                var user = new AuthUserDTO(authUser);
+                user.Token = GenerateJwtToken(user);
+                return user;
+            }
+            return null;
         }
     }
 }

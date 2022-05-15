@@ -1,4 +1,3 @@
-﻿
 import { authenticationService } from '../services';
 
 export function authHeader() {

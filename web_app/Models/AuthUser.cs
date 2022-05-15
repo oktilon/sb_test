@@ -2,12 +2,12 @@
 {
     public class AuthUser
     {
-        public string UserName { get; set; }
+        public string Username { get; set; }
         public string Password { get; set; }
 
         public AuthUser(string name, string password)
         {
-            UserName = name;
+            Username = name;
             Password = password;
         }
     }

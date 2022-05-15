@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using web_app.Models;
 using web_app.Services;
 
@@ -23,9 +24,9 @@ namespace web_app
         {
 
             services.AddSingleton<UsersService>();
-            services.AddScoped<IAuthService, AuthService>();
+            // services.AddScoped<IAuthService, AuthService>();
 
-            services.AddControllersWithViews();
+            services.AddControllers().AddNewtonsoftJson();
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>

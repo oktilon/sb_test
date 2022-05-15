@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using MongoDB.Driver;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using cons_app.Models;
 
 namespace cons_app
 {
@@ -15,7 +18,15 @@ namespace cons_app
                 .Build();
 
             var rabbit = cfg.GetSection("RabbitMQ");
+            var mongo = cfg.GetSection("MongoDB");
             Console.WriteLine("Config RabbitMQ: host={0}, queue={1}", rabbit["Host"], rabbit["Queue"]);
+            Console.WriteLine("Config MongoDB: host={0}, db={1}, tbl={2}", mongo["ConnectionString"], mongo["DatabaseName"], mongo["UsersTable"]);
+
+            var mongoClient = new MongoClient(mongo["ConnectionString"]);
+
+            var mongoDatabase = mongoClient.GetDatabase(mongo["DatabaseName"]);
+
+            var usersCollection = mongoDatabase.GetCollection<User>(mongo["UsersTable"]);
 
             try
             {
@@ -37,7 +48,9 @@ namespace cons_app
                         var message = Encoding.UTF8.GetString(body);
                         Console.WriteLine(" [x] Received {0}", message);
 
-                        //TODO Write to MongoDB
+                        var dto = JsonConvert.DeserializeObject<UserDTO>(message);
+                        var user = new User(dto);
+                        usersCollection.InsertOne(user);
                     };
                     channel.BasicConsume(queue: rabbit["Queue"],
                         autoAck: true,

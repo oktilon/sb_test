@@ -1,6 +1,7 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { Container } from 'reactstrap';
 import { NavMenu } from './NavMenu';
+import PropTypes from 'prop-types';
 
 export class Layout extends Component {
     static displayName = 'Layout';
@@ -15,4 +16,9 @@ export class Layout extends Component {
             </div>
         );
     }
+};
+
+Layout.propTypes = {
+    user: PropTypes.object,
+    children: PropTypes.object
 }
